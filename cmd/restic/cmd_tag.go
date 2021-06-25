@@ -37,6 +37,7 @@ Exit status is 0 if the command was successful, and non-zero if there was any er
 type TagOptions struct {
 	Hosts      []string
 	Paths      []string
+	RawPaths   bool
 	Tags       restic.TagLists
 	SetTags    restic.TagLists
 	AddTags    restic.TagLists
@@ -56,6 +57,7 @@ func init() {
 	tagFlags.StringArrayVarP(&tagOptions.Hosts, "host", "H", nil, "only consider snapshots for this `host`, when no snapshot ID is given (can be specified multiple times)")
 	tagFlags.Var(&tagOptions.Tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot-ID is given")
 	tagFlags.StringArrayVar(&tagOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path`, when no snapshot-ID is given")
+	tagFlags.BoolVar(&tagOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 }
 
 func changeTags(ctx context.Context, repo *repository.Repository, sn *restic.Snapshot, setTags, addTags, removeTags []string) (bool, error) {
@@ -129,7 +131,7 @@ func runTag(opts TagOptions, gopts GlobalOptions, args []string) error {
 	changeCnt := 0
 	ctx, cancel := context.WithCancel(gopts.ctx)
 	defer cancel()
-	for sn := range FindFilteredSnapshots(ctx, repo, opts.Hosts, opts.Tags, opts.Paths, args) {
+	for sn := range FindFilteredSnapshots(ctx, repo, opts.Hosts, opts.Tags, opts.Paths, args, opts.RawPaths) {
 		changed, err := changeTags(ctx, repo, sn, opts.SetTags.Flatten(), opts.AddTags.Flatten(), opts.RemoveTags.Flatten())
 		if err != nil {
 			Warnf("unable to modify the tags for snapshot ID %q, ignoring: %v\n", sn.ID(), err)

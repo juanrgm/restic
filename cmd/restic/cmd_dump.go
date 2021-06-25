@@ -40,10 +40,11 @@ Exit status is 0 if the command was successful, and non-zero if there was any er
 
 // DumpOptions collects all options for the dump command.
 type DumpOptions struct {
-	Hosts   []string
-	Paths   []string
-	Tags    restic.TagLists
-	Archive string
+	Hosts    []string
+	Paths    []string
+	RawPaths bool
+	Tags     restic.TagLists
+	Archive  string
 }
 
 var dumpOptions DumpOptions
@@ -55,6 +56,7 @@ func init() {
 	flags.StringArrayVarP(&dumpOptions.Hosts, "host", "H", nil, `only consider snapshots for this host when the snapshot ID is "latest" (can be specified multiple times)`)
 	flags.Var(&dumpOptions.Tags, "tag", "only consider snapshots which include this `taglist` for snapshot ID \"latest\"")
 	flags.StringArrayVar(&dumpOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path` for snapshot ID \"latest\"")
+	flags.BoolVar(&dumpOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 	flags.StringVarP(&dumpOptions.Archive, "archive", "a", "tar", "set archive `format` as \"tar\" or \"zip\"")
 }
 
@@ -166,7 +168,7 @@ func runDump(opts DumpOptions, gopts GlobalOptions, args []string) error {
 	var id restic.ID
 
 	if snapshotIDString == "latest" {
-		id, err = restic.FindLatestSnapshot(ctx, repo, opts.Paths, opts.Tags, opts.Hosts)
+		id, err = restic.FindLatestSnapshot(ctx, repo, opts.Paths, opts.Tags, opts.Hosts, opts.RawPaths)
 		if err != nil {
 			Exitf(1, "latest snapshot for criteria not found: %v Paths:%v Hosts:%v", err, opts.Paths, opts.Hosts)
 		}

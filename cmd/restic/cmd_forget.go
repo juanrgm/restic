@@ -40,10 +40,11 @@ type ForgetOptions struct {
 	Within   restic.Duration
 	KeepTags restic.TagLists
 
-	Hosts   []string
-	Tags    restic.TagLists
-	Paths   []string
-	Compact bool
+	Hosts    []string
+	Tags     restic.TagLists
+	Paths    []string
+	RawPaths bool
+	Compact  bool
 
 	// Grouping
 	GroupBy string
@@ -77,6 +78,7 @@ func init() {
 	f.Var(&forgetOptions.Tags, "tag", "only consider snapshots which include this `taglist` in the format `tag[,tag,...]` (can be specified multiple times)")
 
 	f.StringArrayVar(&forgetOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path` (can be specified multiple times)")
+	f.BoolVar(&forgetOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 	f.BoolVarP(&forgetOptions.Compact, "compact", "c", false, "use compact output format")
 
 	f.StringVarP(&forgetOptions.GroupBy, "group-by", "g", "host,paths", "string for grouping snapshots by host,paths,tags")
@@ -110,7 +112,7 @@ func runForget(opts ForgetOptions, gopts GlobalOptions, args []string) error {
 	var snapshots restic.Snapshots
 	removeSnIDs := restic.NewIDSet()
 
-	for sn := range FindFilteredSnapshots(ctx, repo, opts.Hosts, opts.Tags, opts.Paths, args) {
+	for sn := range FindFilteredSnapshots(ctx, repo, opts.Hosts, opts.Tags, opts.Paths, args, opts.RawPaths) {
 		snapshots = append(snapshots, sn)
 	}
 

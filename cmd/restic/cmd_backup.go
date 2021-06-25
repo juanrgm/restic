@@ -89,6 +89,7 @@ type BackupOptions struct {
 	FilesFromRaw            []string
 	Paths                   []string
 	PathsFrom               []string
+	RawPaths                bool
 	TimeStamp               string
 	WithAtime               bool
 	IgnoreInode             bool
@@ -132,6 +133,7 @@ func init() {
 	f.StringArrayVar(&backupOptions.FilesFromRaw, "files-from-raw", nil, "read the files to backup from `file` (can be combined with file args; can be specified multiple times)")
 	f.StringArrayVar(&backupOptions.Paths, "set-path", nil, "manually set the `path` of snapshot (default: paths to backup; can be specified multiple times)")
 	f.StringArrayVar(&backupOptions.PathsFrom, "set-paths-from", nil, "read the paths to set from `file` (can be combined with --set-path; can be specified multiple times)")
+	f.BoolVar(&backupOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 	f.StringVar(&backupOptions.TimeStamp, "time", "", "`time` of the backup (ex. '2012-11-01 22:08:41') (default: now)")
 	f.BoolVar(&backupOptions.WithAtime, "with-atime", false, "store the atime for all files and directories")
 	f.BoolVar(&backupOptions.IgnoreInode, "ignore-inode", false, "ignore inode number changes when checking for modified files")
@@ -494,7 +496,7 @@ func findParentSnapshot(ctx context.Context, repo restic.Repository, opts Backup
 
 	// Find last snapshot to set it as parent, if not already set
 	if !opts.Force && parentID == nil {
-		id, err := restic.FindLatestSnapshot(ctx, repo, targets, []restic.TagList{}, []string{opts.Host})
+		id, err := restic.FindLatestSnapshot(ctx, repo, targets, []restic.TagList{}, []string{opts.Host}, opts.RawPaths)
 		if err == nil {
 			parentID = &id
 		} else if err != restic.ErrNoSnapshotFound {
@@ -726,6 +728,7 @@ func runBackup(opts BackupOptions, gopts GlobalOptions, term *termstatus.Termina
 		Hostname:       opts.Host,
 		ParentSnapshot: *parentSnapshotID,
 		Paths:          opts.Paths,
+		RawPaths:       opts.RawPaths,
 	}
 
 	if !gopts.JSON {

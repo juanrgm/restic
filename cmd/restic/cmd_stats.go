@@ -56,9 +56,10 @@ type StatsOptions struct {
 	countMode string
 
 	// filter snapshots by, if given by user
-	Hosts []string
-	Tags  restic.TagLists
-	Paths []string
+	Hosts    []string
+	Tags     restic.TagLists
+	Paths    []string
+	RawPaths bool
 }
 
 var statsOptions StatsOptions
@@ -70,6 +71,7 @@ func init() {
 	f.StringArrayVarP(&statsOptions.Hosts, "host", "H", nil, "only consider snapshots with the given `host` (can be specified multiple times)")
 	f.Var(&statsOptions.Tags, "tag", "only consider snapshots which include this `taglist` in the format `tag[,tag,...]` (can be specified multiple times)")
 	f.StringArrayVar(&statsOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path` (can be specified multiple times)")
+	f.BoolVar(&statsOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 }
 
 func runStats(gopts GlobalOptions, args []string) error {
@@ -111,7 +113,7 @@ func runStats(gopts GlobalOptions, args []string) error {
 		snapshotsCount: 0,
 	}
 
-	for sn := range FindFilteredSnapshots(ctx, repo, statsOptions.Hosts, statsOptions.Tags, statsOptions.Paths, args) {
+	for sn := range FindFilteredSnapshots(ctx, repo, statsOptions.Hosts, statsOptions.Tags, statsOptions.Paths, args, statsOptions.RawPaths) {
 		err = statsWalkSnapshot(ctx, sn, repo, stats)
 		if err != nil {
 			return fmt.Errorf("error walking snapshot: %v", err)

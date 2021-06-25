@@ -37,9 +37,10 @@ new destination repository using the "init" command.
 // CopyOptions bundles all options for the copy command.
 type CopyOptions struct {
 	secondaryRepoOptions
-	Hosts []string
-	Tags  restic.TagLists
-	Paths []string
+	Hosts    []string
+	Tags     restic.TagLists
+	Paths    []string
+	RawPaths bool
 }
 
 var copyOptions CopyOptions
@@ -52,6 +53,7 @@ func init() {
 	f.StringArrayVarP(&copyOptions.Hosts, "host", "H", nil, "only consider snapshots for this `host`, when no snapshot ID is given (can be specified multiple times)")
 	f.Var(&copyOptions.Tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot ID is given")
 	f.StringArrayVar(&copyOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path`, when no snapshot ID is given")
+	f.BoolVar(&copyOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 }
 
 func runCopy(opts CopyOptions, gopts GlobalOptions, args []string) error {
@@ -96,7 +98,7 @@ func runCopy(opts CopyOptions, gopts GlobalOptions, args []string) error {
 	}
 
 	dstSnapshotByOriginal := make(map[restic.ID][]*restic.Snapshot)
-	for sn := range FindFilteredSnapshots(ctx, dstRepo, opts.Hosts, opts.Tags, opts.Paths, nil) {
+	for sn := range FindFilteredSnapshots(ctx, dstRepo, opts.Hosts, opts.Tags, opts.Paths, nil, opts.RawPaths) {
 		if sn.Original != nil && !sn.Original.IsNull() {
 			dstSnapshotByOriginal[*sn.Original] = append(dstSnapshotByOriginal[*sn.Original], sn)
 		}
@@ -107,7 +109,7 @@ func runCopy(opts CopyOptions, gopts GlobalOptions, args []string) error {
 	// remember already processed trees across all snapshots
 	visitedTrees := restic.NewIDSet()
 
-	for sn := range FindFilteredSnapshots(ctx, srcRepo, opts.Hosts, opts.Tags, opts.Paths, args) {
+	for sn := range FindFilteredSnapshots(ctx, srcRepo, opts.Hosts, opts.Tags, opts.Paths, args, opts.RawPaths) {
 		Verbosef("\nsnapshot %s of %v at %s)\n", sn.ID().Str(), sn.Paths, sn.Time)
 
 		// check whether the destination has a snapshot with the same persistent ID which has similar snapshot fields

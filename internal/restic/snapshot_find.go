@@ -14,17 +14,20 @@ import (
 var ErrNoSnapshotFound = errors.New("no snapshot found")
 
 // FindLatestSnapshot finds latest snapshot with optional target/directory, tags and hostname filters.
-func FindLatestSnapshot(ctx context.Context, repo Repository, targets []string, tagLists []TagList, hostnames []string) (ID, error) {
+func FindLatestSnapshot(ctx context.Context, repo Repository, targets []string, tagLists []TagList, hostnames []string, rawPaths bool) (ID, error) {
 	var err error
-	absTargets := make([]string, 0, len(targets))
-	for _, target := range targets {
-		if !filepath.IsAbs(target) {
-			target, err = filepath.Abs(target)
-			if err != nil {
-				return ID{}, errors.Wrap(err, "Abs")
+	if !rawPaths {
+		absTargets := make([]string, 0, len(targets))
+		for _, target := range targets {
+			if !filepath.IsAbs(target) {
+				target, err = filepath.Abs(target)
+				if err != nil {
+					return ID{}, errors.Wrap(err, "Abs")
+				}
 			}
+			absTargets = append(absTargets, filepath.Clean(target))
 		}
-		absTargets = append(absTargets, filepath.Clean(target))
+		targets = absTargets
 	}
 
 	var (
@@ -50,7 +53,7 @@ func FindLatestSnapshot(ctx context.Context, repo Repository, targets []string, 
 			return nil
 		}
 
-		if !snapshot.HasPaths(absTargets) {
+		if !snapshot.HasPaths(targets) {
 			return nil
 		}
 

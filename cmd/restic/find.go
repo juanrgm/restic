@@ -8,7 +8,7 @@ import (
 )
 
 // FindFilteredSnapshots yields Snapshots, either given explicitly by `snapshotIDs` or filtered from the list of all snapshots.
-func FindFilteredSnapshots(ctx context.Context, repo *repository.Repository, hosts []string, tags []restic.TagList, paths []string, snapshotIDs []string) <-chan *restic.Snapshot {
+func FindFilteredSnapshots(ctx context.Context, repo *repository.Repository, hosts []string, tags []restic.TagList, paths []string, snapshotIDs []string, rawPaths bool) <-chan *restic.Snapshot {
 	out := make(chan *restic.Snapshot)
 	go func() {
 		defer close(out)
@@ -23,7 +23,7 @@ func FindFilteredSnapshots(ctx context.Context, repo *repository.Repository, hos
 			for _, s := range snapshotIDs {
 				if s == "latest" {
 					usedFilter = true
-					id, err = restic.FindLatestSnapshot(ctx, repo, paths, tags, hosts)
+					id, err = restic.FindLatestSnapshot(ctx, repo, paths, tags, hosts, rawPaths)
 					if err != nil {
 						Warnf("Ignoring %q, no snapshot matched given filter (Paths:%v Tags:%v Hosts:%v)\n", s, paths, tags, hosts)
 						continue

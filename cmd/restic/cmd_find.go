@@ -51,6 +51,7 @@ type FindOptions struct {
 	ListLong           bool
 	Hosts              []string
 	Paths              []string
+	RawPaths           bool
 	Tags               restic.TagLists
 }
 
@@ -73,6 +74,7 @@ func init() {
 	f.StringArrayVarP(&findOptions.Hosts, "host", "H", nil, "only consider snapshots for this `host`, when no snapshot ID is given (can be specified multiple times)")
 	f.Var(&findOptions.Tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot-ID is given")
 	f.StringArrayVar(&findOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path`, when no snapshot-ID is given")
+	f.BoolVar(&findOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 }
 
 type findPattern struct {
@@ -567,7 +569,7 @@ func runFind(opts FindOptions, gopts GlobalOptions, args []string) error {
 		}
 	}
 
-	for sn := range FindFilteredSnapshots(ctx, repo, opts.Hosts, opts.Tags, opts.Paths, opts.Snapshots) {
+	for sn := range FindFilteredSnapshots(ctx, repo, opts.Hosts, opts.Tags, opts.Paths, opts.Snapshots, opts.RawPaths) {
 		if f.blobIDs != nil || f.treeIDs != nil {
 			if err = f.findIDs(ctx, sn); err != nil && err.Error() != "OK" {
 				return err

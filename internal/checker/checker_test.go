@@ -495,7 +495,7 @@ func TestCheckerBlobTypeConfusion(t *testing.T) {
 	test.OK(t, repo.Flush(ctx))
 	test.OK(t, repo.SaveIndex(ctx))
 
-	snapshot, err := restic.NewSnapshot([]string{"/damaged"}, []string{"test"}, "foo", time.Now())
+	snapshot, err := restic.NewSnapshot([]string{"/damaged"}, []string{"test"}, "foo", time.Now(), false)
 	test.OK(t, err)
 
 	snapshot.Tree = &rootID
@@ -590,7 +590,7 @@ func benchmarkSnapshotScaling(t *testing.B, newSnapshots int) {
 	treeID := sn2.Tree
 
 	for i := 0; i < newSnapshots; i++ {
-		sn, err := restic.NewSnapshot([]string{"test" + strconv.Itoa(i)}, nil, "", time.Now())
+		sn, err := restic.NewSnapshot([]string{"test" + strconv.Itoa(i)}, nil, "", time.Now(), false)
 		if err != nil {
 			t.Fatal(err)
 		}

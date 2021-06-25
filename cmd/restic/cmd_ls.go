@@ -51,6 +51,7 @@ type LsOptions struct {
 	Hosts     []string
 	Tags      restic.TagLists
 	Paths     []string
+	RawPaths  bool
 	Recursive bool
 }
 
@@ -64,6 +65,7 @@ func init() {
 	flags.StringArrayVarP(&lsOptions.Hosts, "host", "H", nil, "only consider snapshots for this `host`, when no snapshot ID is given (can be specified multiple times)")
 	flags.Var(&lsOptions.Tags, "tag", "only consider snapshots which include this `taglist`, when no snapshot ID is given")
 	flags.StringArrayVar(&lsOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path`, when no snapshot ID is given")
+	flags.BoolVar(&lsOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 	flags.BoolVar(&lsOptions.Recursive, "recursive", false, "include files in subfolders of the listed directories")
 }
 
@@ -209,7 +211,7 @@ func runLs(opts LsOptions, gopts GlobalOptions, args []string) error {
 		}
 	}
 
-	for sn := range FindFilteredSnapshots(ctx, repo, opts.Hosts, opts.Tags, opts.Paths, args[:1]) {
+	for sn := range FindFilteredSnapshots(ctx, repo, opts.Hosts, opts.Tags, opts.Paths, args[:1], opts.RawPaths) {
 		printSnapshot(sn)
 
 		err := walker.Walk(ctx, repo, *sn.Tree, nil, func(_ restic.ID, nodepath string, node *restic.Node, err error) (bool, error) {

@@ -42,6 +42,7 @@ type RestoreOptions struct {
 	Target             string
 	Hosts              []string
 	Paths              []string
+	RawPaths           bool
 	Tags               restic.TagLists
 	Verify             bool
 }
@@ -61,6 +62,7 @@ func init() {
 	flags.StringArrayVarP(&restoreOptions.Hosts, "host", "H", nil, `only consider snapshots for this host when the snapshot ID is "latest" (can be specified multiple times)`)
 	flags.Var(&restoreOptions.Tags, "tag", "only consider snapshots which include this `taglist` for snapshot ID \"latest\"")
 	flags.StringArrayVar(&restoreOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path` for snapshot ID \"latest\"")
+	flags.BoolVar(&restoreOptions.RawPaths, "raw-paths", false, "avoid normalize the paths")
 	flags.BoolVar(&restoreOptions.Verify, "verify", false, "verify restored files content")
 }
 
@@ -117,7 +119,7 @@ func runRestore(opts RestoreOptions, gopts GlobalOptions, args []string) error {
 	var id restic.ID
 
 	if snapshotIDString == "latest" {
-		id, err = restic.FindLatestSnapshot(ctx, repo, opts.Paths, opts.Tags, opts.Hosts)
+		id, err = restic.FindLatestSnapshot(ctx, repo, opts.Paths, opts.Tags, opts.Hosts, opts.RawPaths)
 		if err != nil {
 			Exitf(1, "latest snapshot for criteria not found: %v Paths:%v Hosts:%v", err, opts.Paths, opts.Hosts)
 		}

@@ -32,19 +32,23 @@ type Snapshot struct {
 
 // NewSnapshot returns an initialized snapshot struct for the current user and
 // time.
-func NewSnapshot(paths []string, tags []string, hostname string, time time.Time) (*Snapshot, error) {
-	absPaths := make([]string, 0, len(paths))
-	for _, path := range paths {
-		p, err := filepath.Abs(path)
-		if err == nil {
-			absPaths = append(absPaths, p)
-		} else {
-			absPaths = append(absPaths, path)
+func NewSnapshot(paths []string, tags []string, hostname string, time time.Time, rawPaths bool) (*Snapshot, error) {
+
+	if !rawPaths {
+		absPaths := make([]string, 0, len(paths))
+		for _, path := range paths {
+			p, err := filepath.Abs(path)
+			if err == nil {
+				absPaths = append(absPaths, p)
+			} else {
+				absPaths = append(absPaths, path)
+			}
 		}
+		paths = absPaths
 	}
 
 	sn := &Snapshot{
-		Paths:    absPaths,
+		Paths:    paths,
 		Time:     time,
 		Tags:     tags,
 		Hostname: hostname,
